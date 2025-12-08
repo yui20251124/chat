@@ -15,15 +15,16 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-// ===== 自分の firebaseConfig をここに貼る =====
+// ===== firebaseConfig =====
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXXXXX",
-  appId: "XXXXXXXX"
+  apiKey: "AIzaSyBkKibOJB4ETY3mOfanATWA9BQQl12zvhQ",
+  authDomain: "chat-app-a7275.firebaseapp.com",
+  projectId: "chat-app-a7275",
+  storageBucket: "chat-app-a7275.firebasestorage.app",
+  messagingSenderId: "245091266796",
+  appId: "1:245091266796:web:873d3c3b32c54d3ab7b5c9"
 };
+
 
 // Firebase 初期化
 const app = initializeApp(firebaseConfig);
