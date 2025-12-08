@@ -16,14 +16,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 // ===== firebaseConfig =====
-const firebaseConfig = {
-  apiKey: "AIzaSyBkKibOJB4ETY3mOfanATWA9BQQl12zvhQ",
-  authDomain: "chat-app-a7275.firebaseapp.com",
-  projectId: "chat-app-a7275",
-  storageBucket: "chat-app-a7275.firebasestorage.app",
-  messagingSenderId: "245091266796",
-  appId: "1:245091266796:web:873d3c3b32c54d3ab7b5c9"
-};
 
 
 // Firebase 初期化
