@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文通✉️</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>手書きで送り合う、デジタル文通アプリ</h1>
+      <div class="user-info">
+        <input id="displayName" placeholder="あなたの名前" />
+        <button id="saveName">OK</button>
+      </div>
+
+      <!-- ここを追加：部屋ID＋招待リンク関連 -->
+      <div class="room-controls">
+        <span class="room-label">
+          部屋ID：<span id="roomIdView"></span>
+        </span>
+        <button id="newRoom">新しい部屋</button>
+        <button id="copyLink">招待リンクをコピー</button>
+      </div>
+      <!-- ここまで -->
+    </header>
+
+    <main class="main">
+      <ul id="messages"></ul>
+    </main>
+
+    <!-- 手書きエリア -->
+    <div class="draw-area">
+      <canvas id="drawCanvas"></canvas>
+      <div class="draw-controls">
+        <button id="clearCanvas">全部消す</button>
+        <button id="sendCanvas">送信</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase + メイン処理 -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>
