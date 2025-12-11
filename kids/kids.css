@@ -1,0 +1,82 @@
+/* 全体 */
+body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  font-family: "Rounded Mplus 1c", system-ui, sans-serif;
+  text-align: center;
+}
+
+/* ロゴ */
+.logo-area {
+  margin-top: 30px;
+}
+.logo {
+  width: 180px;
+}
+
+/* メイン */
+.main-area {
+  margin-top: 60px;
+}
+
+.voice-button-area {
+  display: flex;
+  justify-content: center;
+}
+
+/* 丸ボタン */
+.round-btn {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 10px solid #7fd3e8;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 7px 0 #5fbfd6;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.round-btn:active {
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 #5fbfd6;
+}
+
+/* ゆらゆら録音中アニメ */
+.speak.recording {
+  animation: breathing 1.2s infinite;
+}
+
+@keyframes breathing {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* カラフル文字 */
+.colorful span:nth-child(1) { color: #ff6f91; }
+.colorful span:nth-child(2) { color: #ffc75f; }
+.colorful span:nth-child(3) { color: #4dd091; }
+.colorful span:nth-child(4) { color: #5f9cff; }
+.colorful span:nth-child(5) { color: #c77dff; }
+
+.colorful {
+  letter-spacing: 4px;
+}
+
+/* 非表示 */
+.hidden {
+  display: none;
+}
+
+/* ステータス文字 */
+.status-text {
+  margin-top: 30px;
+  font-size: 18px;
+  color: #777;
+}

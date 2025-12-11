@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>kids</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ロゴ（画像がなければ img は消してOK） -->
+  <header class="logo-area">
+    <!-- maruani.png を同じフォルダに置いている前提 -->
+    <img src="maruani.png" alt="おやこボイス" class="logo" />
+  </header>
+
+  <main class="main-area">
+    <div class="voice-button-area">
+      <!-- つたえるボタン -->
+      <button id="startRecord" class="round-btn speak">
+        <span class="colorful">
+          <span>つ</span><span>た</span><span>え</span><span>る</span>
+        </span>
+      </button>
+
+      <!-- おくるボタン（最初は隠す） -->
+      <button id="sendRecord" class="round-btn send hidden">
+        <span class="colorful">
+          <span>お</span><span>く</span><span>る</span>
+        </span>
+      </button>
+    </div>
+
+    <p class="status-text" id="statusText">ボタンをおしてね</p>
+  </main>
+
+  <!-- JS 読み込み -->
+  <script src="main.js"></script>
+</body>
+</html>
