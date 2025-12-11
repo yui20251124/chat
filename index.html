@@ -3,44 +3,137 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>文通✉️</title>
-  <link rel="stylesheet" href="style.css">
+  <title>おやこボイス - モードをえらぶ</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fffdf8;
+    }
+
+    .wrap {
+      text-align: center;
+    }
+
+    .logo-circle {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 10px solid #8fd5e6; /* 水色リング */
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ひらがなロゴ */
+    .logo-text {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      display: flex;
+      gap: 2px;
+    }
+
+    /* 6文字それぞれ色付け */
+    .logo-text span:nth-child(1) { color: #0c86d6; }  /* お */
+    .logo-text span:nth-child(2) { color: #ff8fa3; }  /* や */
+    .logo-text span:nth-child(3) { color: #ffd166; }  /* こ */
+    .logo-text span:nth-child(4) { color: #7bdcb5; }  /* ボ */
+    .logo-text span:nth-child(5) { color: #b19cd9; }  /* イ */
+    .logo-text span:nth-child(6) { color: #ff9cee; }  /* ス */
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 6px solid #8fd5e6;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .mode-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 26px rgba(0,0,0,0.08);
+      background: #f5fcff;
+    }
+
+    .mode-label-main {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .mode-label-sub {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .kids .mode-label-main {
+      color: #ffb347;
+    }
+
+    .parent .mode-label-main {
+      color: #0c86d6;
+    }
+
+    @media (max-width: 480px) {
+      .mode-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <h1>手書きで送り合う、デジタル文通アプリ</h1>
-      <div class="user-info">
-        <input id="displayName" placeholder="あなたの名前" />
-        <button id="saveName">OK</button>
-      </div>
+  <div class="wrap">
 
-      <!-- ここを追加：部屋ID＋招待リンク関連 -->
-      <div class="room-controls">
-        <span class="room-label">
-          部屋ID：<span id="roomIdView"></span>
-        </span>
-        <button id="newRoom">新しい部屋</button>
-        <button id="copyLink">招待リンクをコピー</button>
-      </div>
-      <!-- ここまで -->
-    </header>
-
-    <main class="main">
-      <ul id="messages"></ul>
-    </main>
-
-    <!-- 手書きエリア -->
-    <div class="draw-area">
-      <canvas id="drawCanvas"></canvas>
-      <div class="draw-controls">
-        <button id="clearCanvas">全部消す</button>
-        <button id="sendCanvas">送信</button>
+    <div class="logo-circle">
+      <div class="logo-text">
+        <span>お</span><span>や</span><span>こ</span><span>ボ</span><span>イ</span><span>ス</span>
       </div>
     </div>
-  </div>
 
-  <!-- Firebase + メイン処理 -->
-  <script type="module" src="main.js"></script>
+    <p class="subtitle">つかうひとを えらんでね</p>
+
+    <div class="mode-buttons">
+
+      <button class="mode-btn kids" onclick="location.href='./kids/index.html'">
+        <div>
+          <div class="mode-label-main">こどもモード</div>
+          <div class="mode-label-sub">タブレットで つかう</div>
+        </div>
+      </button>
+
+      <button class="mode-btn parent" onclick="location.href='./parent/index.html'">
+        <div>
+          <div class="mode-label-main">おやモード</div>
+          <div class="mode-label-sub">スマホ・PCで つかう</div>
+        </div>
+      </button>
+
+    </div>
+  </div>
 </body>
 </html>
