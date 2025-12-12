@@ -97,20 +97,22 @@ function subscribeMessages() {
 
 // ==============================
 // メッセージ描画（LINE風）
+// こども: role === "child", type: "audio"
+// おや  : role === "parent", type: "text"
 // ==============================
 function renderMessage(data) {
   const li = document.createElement("li");
   li.classList.add("message");
 
-  // role で左右わける
   const isParent = data.role === "parent";
+
   if (isParent) {
     li.classList.add("from-parent");
   } else {
     li.classList.add("from-child");
   }
 
-  // 上部メタ
+  // ---- 上部メタ（だれから / 時刻） ----
   const meta = document.createElement("div");
   meta.classList.add("msg-meta");
 
@@ -132,27 +134,61 @@ function renderMessage(data) {
   meta.appendChild(fromSpan);
   meta.appendChild(timeSpan);
 
-  // 本文
+  // ---- 本文エリア ----
   const body = document.createElement("div");
   body.classList.add("msg-body");
 
   const tag = document.createElement("div");
   tag.classList.add("msg-tag");
 
-  if (isParent) {
-    tag.classList.add("tag-tts");   // 親 → 子（読み上げ）
-    tag.textContent = "よみあげ";
-  } else {
-    tag.classList.add("tag-voice"); // 子 → 親（ボイメ → 文字）
-    tag.textContent = "ボイメ";
-  }
-
+  // テキスト部分（あれば）
   const textP = document.createElement("p");
   textP.classList.add("msg-text");
-  textP.textContent = data.text || "";
 
-  body.appendChild(tag);
-  body.appendChild(textP);
+  // ==== 親 → 子（テキスト → 読み上げ） ====
+  if (isParent) {
+    tag.classList.add("tag-tts");
+    tag.textContent = "よみあげ";
+
+    textP.textContent = data.text || "";
+    body.appendChild(tag);
+    body.appendChild(textP);
+
+    // 将来：TTS用の設定ボタンなどをここに追加もできる
+  }
+  // ==== 子 → 親（音声 or 文字） ====
+  else {
+    // 音声メッセージ
+    if (data.type === "audio" && data.audioDataUrl) {
+      tag.classList.add("tag-voice");
+      tag.textContent = "ボイメ";
+
+      body.appendChild(tag);
+
+      // 音声プレーヤー
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = data.audioDataUrl;
+      audio.classList.add("msg-audio");
+      body.appendChild(audio);
+
+      // もし文字起こしがあれば表示（まだなければスキップ）
+      if (data.text) {
+        const transcript = document.createElement("p");
+        transcript.classList.add("msg-text", "msg-transcript");
+        transcript.textContent = data.text;
+        body.appendChild(transcript);
+      }
+    } else {
+      // 文字だけ来た場合（将来の拡張用）
+      tag.classList.add("tag-voice");
+      tag.textContent = "こども";
+
+      textP.textContent = data.text || "";
+      body.appendChild(tag);
+      body.appendChild(textP);
+    }
+  }
 
   li.appendChild(meta);
   li.appendChild(body);
@@ -160,7 +196,7 @@ function renderMessage(data) {
 }
 
 // ==============================
-// 送信処理（親 → 子）
+// 送信処理（親 → 子 : テキスト）
 // ==============================
 sendBtnEl.addEventListener("click", async () => {
   console.log("send clicked");
@@ -181,12 +217,11 @@ sendBtnEl.addEventListener("click", async () => {
     console.log("writing to firestore...");
 
     await addDoc(messagesRef, {
-      type: "text",
-      role: "parent",      // 親からのメッセージ
-      text: text,
-      uid: currentUid || null,
-      createdAt: serverTimestamp(),
-    });
+  type: "text",
+  role: "parent",
+  text: text,          // ← ここに読み上げたい日本語
+  createdAt: serverTimestamp(),
+});
 
     console.log("firestore write done");
     replyInputEl.value = "";
