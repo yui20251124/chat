@@ -80,3 +80,15 @@ body {
   font-size: 18px;
   color: #777;
 }
+
+/* 読み上げ中（きくボタンの演出） */
+.round-btn.listening {
+  animation: breathing 1.2s infinite;
+  border-color: #ffd166;
+  box-shadow: 0 7px 0 #f4b942;
+}
+
+/* 未読がある時の強調（任意） */
+.round-btn.has-unread {
+  outline: 6px solid rgba(255, 209, 102, 0.35);
+}

@@ -7,6 +7,11 @@ import {
   collection,
   addDoc,
   serverTimestamp,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import {
   getAuth,
@@ -33,68 +38,64 @@ const auth = getAuth(app);
 // ==============================
 // DOM 取得
 // ==============================
-const startBtn = document.getElementById("startRecord"); // つたえる
-const sendBtn = document.getElementById("sendRecord");   // おくる
+const startBtn = document.getElementById("startRecord"); // つたえる / きく
+const sendBtn  = document.getElementById("sendRecord");  // おくる
 const statusText = document.getElementById("statusText");
 
-// 固定ルーム（親側と合わせる）
+// 固定ルーム
 const ROOM_ID = "room-0001";
-let messagesRef = collection(db, "rooms", ROOM_ID, "messages");
+const messagesRef = collection(db, "rooms", ROOM_ID, "messages");
+
+// ==============================
+// 状態
+// ==============================
+let currentUid = null;
+let latestParentMessage = null; // { id, text }
+let hasUnreadParent = false;
+
+// 既読管理（localStorage）
+const LAST_READ_PARENT_KEY = `oyakomi_lastReadParent_${ROOM_ID}`;
+const lastReadParentId = () => localStorage.getItem(LAST_READ_PARENT_KEY);
+const setLastReadParentId = (id) =>
+  localStorage.setItem(LAST_READ_PARENT_KEY, id);
 
 // ==============================
 // 匿名ログイン
 // ==============================
-let currentUid = null;
-
-signInAnonymously(auth).catch((err) => {
-  console.error("匿名ログイン失敗:", err);
+signInAnonymously(auth).catch(() => {
   statusText.textContent = "ログインにしっぱいしました";
 });
 
 onAuthStateChanged(auth, (user) => {
   if (!user) return;
   currentUid = user.uid;
-  console.log("kids auth OK:", currentUid);
+  subscribeParentMessages();
+  statusText.textContent = "ボタンをおしてね";
 });
 
 // ==============================
-// Web Speech API（音声認識）
+// Web Speech API（音声認識：子 → 親）
 // ==============================
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
-if (!SpeechRecognition) {
-  // 対応してないブラウザ
-  alert("このブラウザでは音声入力がつかえません。（Chrome 系推奨）");
-  statusText.textContent = "おとがつかえない きかいみたい…";
-}
-
-// 認識インスタンス
 const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
-// 日本語 & シンプル設定
-if (recognition) {
+if (!recognition) {
+  alert("このブラウザでは音声入力がつかえません");
+} else {
   recognition.lang = "ja-JP";
-  recognition.interimResults = false; // 確定した結果だけ
-  recognition.maxAlternatives = 1;
+  recognition.interimResults = false;
 }
 
-let latestTranscript = ""; // 直近のテキストを保持
+let latestTranscript = "";
 
-// ==============================
-// 音声認識イベント
-// ==============================
 if (recognition) {
-  // 結果が返ってきたとき
   recognition.addEventListener("result", (event) => {
-    const text = event.results[0][0].transcript;
-    console.log("speech result:", text);
-    latestTranscript = text;
+    latestTranscript = event.results[0][0].transcript;
   });
 
-  // 認識終了（ユーザーが黙る / 手動停止）
   recognition.addEventListener("end", async () => {
-    // ボタン表示を元に戻す
     sendBtn.classList.add("hidden");
     startBtn.classList.remove("hidden");
     startBtn.classList.remove("recording");
@@ -106,58 +107,160 @@ if (recognition) {
 
     statusText.textContent = "おくってるよ…";
 
-    try {
-      await addDoc(messagesRef, {
-        type: "voiceText",      // 子ども → 親の音声テキスト
-        role: "child",
-        text: latestTranscript, // ここが親画面に表示される
-        uid: currentUid || null,
-        createdAt: serverTimestamp(),
-      });
+    await addDoc(messagesRef, {
+      type: "voiceText",
+      role: "child",
+      text: latestTranscript,
+      uid: currentUid,
+      createdAt: serverTimestamp(),
+    });
 
-      console.log("kids message sent:", latestTranscript);
-      statusText.textContent = "おくったよ！";
-      latestTranscript = "";
-    } catch (e) {
-      console.error("firestore error:", e);
-      statusText.textContent = "おくるのに しっぱいしちゃった";
-    }
-  });
-
-  recognition.addEventListener("error", (e) => {
-    console.error("speech error:", e);
-    statusText.textContent = "おとを ひろえなかったみたい";
-    // ボタンも戻しておく
-    sendBtn.classList.add("hidden");
-    startBtn.classList.remove("hidden");
-    startBtn.classList.remove("recording");
+    latestTranscript = "";
+    statusText.textContent = "おくったよ！";
   });
 }
 
 // ==============================
-// ボタンの動き
+// Web Speech API（読み上げ：親 → 子）
 // ==============================
 
-// つたえる（録音・認識スタート）
+// ★ 追加：voice キャッシュ（Safari対策）
+let cachedVoices = [];
+
+function loadVoices() {
+  cachedVoices = window.speechSynthesis?.getVoices?.() || [];
+}
+
+if ("speechSynthesis" in window) {
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = () => loadVoices();
+}
+
+function pickJapaneseVoice() {
+  return (
+    cachedVoices.find((v) => v.lang === "ja-JP") ||
+    cachedVoices.find((v) => (v.lang || "").startsWith("ja")) ||
+    null
+  );
+}
+
+function speakParentText(text, onDone) {
+  window.speechSynthesis.cancel();
+
+  const uttr = new SpeechSynthesisUtterance(text);
+  uttr.lang = "ja-JP";
+
+  loadVoices();
+  const voice = pickJapaneseVoice();
+  if (voice) uttr.voice = voice;
+
+  startBtn.classList.add("listening");
+  statusText.textContent = "きいてね";
+
+  uttr.onend = () => {
+    startBtn.classList.remove("listening");
+    statusText.textContent = "ボタンをおしてね";
+    onDone?.();
+  };
+
+  window.speechSynthesis.speak(uttr);
+}
+
+// ==============================
+// 親メッセージ購読
+// ==============================
+function subscribeParentMessages() {
+  const q = query(messagesRef, orderBy("createdAt", "asc"));
+
+  onSnapshot(q, (snapshot) => {
+    snapshot.docChanges().forEach((ch) => {
+      if (ch.type !== "added") return;
+
+      const id = ch.doc.id;
+      const data = ch.doc.data();
+
+      if (data.role !== "parent" || data.type !== "text") return;
+      if (lastReadParentId() === id) return;
+
+      latestParentMessage = { id, text: data.text };
+      hasUnreadParent = true;
+      setButtonToListenMode();
+
+      maybeNotify("おやからメッセージ", data.text || "");
+    });
+  });
+}
+
+// ==============================
+// UI 切り替え
+// ==============================
+function setButtonToListenMode() {
+  startBtn.classList.add("has-unread");
+  startBtn.querySelector(".colorful").innerHTML =
+    "<span>き</span><span>く</span>";
+  statusText.textContent = "おやから きてるよ";
+}
+
+function setButtonToSpeakMode() {
+  startBtn.classList.remove("has-unread");
+  startBtn.querySelector(".colorful").innerHTML =
+    "<span>つ</span><span>た</span><span>え</span><span>る</span>";
+  statusText.textContent = "ボタンをおしてね";
+}
+
+// ==============================
+// 既読保存
+// ==============================
+async function markParentRead(messageId) {
+  setLastReadParentId(messageId);
+  await updateDoc(
+    doc(db, "rooms", ROOM_ID, "messages", messageId),
+    { readByChildAt: serverTimestamp() }
+  );
+}
+
+// ==============================
+// 通知（簡易）
+// ==============================
+function maybeNotify(title, body) {
+  if (!("Notification" in window)) return;
+  if (document.visibilityState === "visible") return;
+
+  if (Notification.permission === "granted") {
+    new Notification(title, { body });
+  } else if (Notification.permission === "default") {
+    Notification.requestPermission().then((p) => {
+      if (p === "granted") new Notification(title, { body });
+    });
+  }
+}
+
+// ==============================
+// ボタン動作
+// ==============================
 startBtn.addEventListener("click", () => {
-  if (!recognition) return;
-  if (!currentUid) {
-    alert("まだ準備ちゅう… もういちど おしてね");
+  if (hasUnreadParent && latestParentMessage) {
+    const { id, text } = latestParentMessage;
+    hasUnreadParent = false;
+
+    speakParentText(text, async () => {
+      await markParentRead(id);
+      latestParentMessage = null;
+      setButtonToSpeakMode();
+    });
     return;
   }
 
+  // 子どもが話す
   latestTranscript = "";
   recognition.start();
-
   startBtn.classList.add("hidden");
   sendBtn.classList.remove("hidden");
   startBtn.classList.add("recording");
   statusText.textContent = "はなしてね";
 });
 
-// おくる（手動で認識ストップ → end イベントで送信）
 sendBtn.addEventListener("click", () => {
-  if (!recognition) return;
   recognition.stop();
   statusText.textContent = "おくってるよ…";
 });
